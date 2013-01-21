@@ -62,12 +62,27 @@ test("emits the initial value", function() {
   shouldHaveElement('a[href*="example.com"]');
 });
 
+test("emits the initial value (with a prefix and suffix)", function() {
+  var controller = Ember.Object.create({ url: "example.com" });
+  append("<a {{#id}}href='{{bind-attribute 'href' url prefix='http://' suffix='/'}}'{{/id}}>click here</a>", controller);
+
+  shouldHaveElement('a[href="http://example.com/"]');
+});
+
 test("updates the initial value when it changes", function() {
   var controller = Ember.Object.create({ url: "http://example.com" });
   append("<a {{#id}}href='{{bind-attribute 'href' url}}'{{/id}}>click here</a>", controller);
   set(controller, 'url', "http://yehudakatz.com");
 
   shouldHaveElement('a[href*="yehudakatz.com"]');
+});
+
+test("updates the initial value when it changes (with a prefix and suffix)", function() {
+  var controller = Ember.Object.create({ url: "example.com" });
+  append("<a {{#id}}href='{{bind-attribute 'href' url prefix='http://' suffix='/'}}'{{/id}}>click here</a>", controller);
+  set(controller, 'url', "yehudakatz.com");
+
+  shouldHaveElement('a[href="http://yehudakatz.com/"]');
 });
 
 test("removes the attribute if the value becomes falsy", function() {
@@ -160,6 +175,13 @@ test("emits the initial value", function() {
   shouldHaveElement('a[href*="example.com"]');
 });
 
+test("emits the initial value (with a prefix and suffix)", function() {
+  var controller = Ember.Object.create({ url: "example.com" });
+  append(process("<a href='http://{{url}}/'>click here</a>"), controller);
+
+  shouldHaveElement('a[href="http://example.com/"]');
+});
+
 test("updates the initial value when it changes", function() {
   var controller = Ember.Object.create({ url: "http://example.com" });
   append(process("<a href='{{url}}'>click here</a>"), controller);
@@ -167,6 +189,53 @@ test("updates the initial value when it changes", function() {
 
   shouldHaveElement('a[href*="yehudakatz.com"]');
 });
+
+test("updates the initial value when it changes (with a prefix and suffix)", function() {
+  var controller = Ember.Object.create({ url: "example.com" });
+  append(process("<a href='http://{{url}}/'>click here</a>"), controller);
+  set(controller, 'url', "yehudakatz.com");
+
+  shouldHaveElement('a[href="http://yehudakatz.com/"]');
+});
+
+test("double quotes in prefixes and suffixes", function() {
+  var controller = Ember.Object.create({ title: "Edge Cases" });
+  append(process("<div title='\"{{title}}\"'>Living on the Edge</div>"), controller);
+  set(controller, 'title', "Life on the Edge");
+
+  shouldHaveElement('div[title=\'"Life on the Edge"\']');
+});
+
+test("single quotes in prefixes and suffixes", function() {
+  var controller = Ember.Object.create({ title: "Edge Cases" });
+  append(process("<div title=\"'{{title}}'\">Living on the Edge</div>"), controller);
+
+  shouldHaveElement('div[title="\'Edge Cases\'"]');
+
+  set(controller, 'title', "Life on the Edge");
+
+  shouldHaveElement('div[title="\'Life on the Edge\'"]');
+});
+
+test("single quotes in the attribute's value", function() {
+  var controller = Ember.Object.create({ title: "'Edge Cases'" });
+  append(process("<div title=\"{{title}}\">Living on the Edge</div>"), controller);
+
+  shouldHaveElement("div[title=\"'Edge Cases'\"]");
+
+  set(controller, 'title', "'Life on the Edge'");
+
+  shouldHaveElement("div[title=\"'Life on the Edge'\"]");
+});
+
+test("double quotes in the attribute's value", function() {
+  var controller = Ember.Object.create({ title: '"Edge Cases"' });
+  append(process("<div title=\"{{title}}\">Living on the Edge</div>"), controller);
+  set(controller, 'title', '"Life on the Edge"');
+
+  shouldHaveElement('div[title=\'"Life on the Edge"\']');
+});
+
 
 test("removes the attribute if the value becomes falsy", function() {
   var controller = Ember.Object.create({ url: "http://example.com" });
