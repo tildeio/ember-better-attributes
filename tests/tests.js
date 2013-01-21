@@ -8,9 +8,10 @@ Ember.Handlebars.registerHelper('test-id', function(options) {
 
 var compile = Ember.Handlebars.compile;
 
-function append(string) {
+function append(string, controller) {
   var template = compile(string),
       view = Ember.View.create({
+        controller: controller,
         template: template
       });
 
@@ -29,16 +30,60 @@ function $(selector) {
   return Ember.$(selector, '#qunit-fixture');
 }
 
+function set(object, name, value) {
+  Ember.run(function() {
+    Ember.set(object, name, value);
+  });
+}
+
 module("The {{#id}} helper");
 
-test("The #id helper generates an `id` for downstream usage", function() {
+test("generates an `id` for downstream usage", function() {
   append("<div {{#id}}data-id='{{test-id}}'{{/id}}>Contents</div>");
-  shouldHaveElement('[data-id^=ember]');
+
+  shouldHaveElement('[data-id]');
+  var id = $("[data-id]").attr('data-id');
+  shouldHaveElement('[id="' + id + '"]');
 });
 
-test("The #id helper takes an explicit `id` that it supplies downstream", function() {
-  append('<div {{#id "explicit"}}data-id="{{test-id}}"{{/id}}>Contents</div>');
-  shouldHaveElement('[data-id=explicit]');
+test("takes an explicit `id` that it supplies downstream", function() {
+  append('<div id="explicit" {{#id "explicit"}}data-id="{{test-id}}"{{/id}}>Contents</div>');
+
+  shouldHaveElement('[id^="explicit"]');
+  shouldHaveElement('[data-id="explicit"]');
+});
+
+module("The {{bind-attribute}} helper (used with #id)");
+
+test("emits the initial value", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append("<a {{#id}}href='{{bind-attribute 'href' url}}'{{/id}}>click here</a>", controller);
+
+  shouldHaveElement('a[href*="example.com"]');
+});
+
+test("updates the initial value when it changes", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append("<a {{#id}}href='{{bind-attribute 'href' url}}'{{/id}}>click here</a>", controller);
+  set(controller, 'url', "http://yehudakatz.com");
+
+  shouldHaveElement('a[href*="yehudakatz.com"]');
+});
+
+test("removes the attribute if the value becomes falsy", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append("<a {{#id}}href='{{bind-attribute 'href' url}}'{{/id}}>click here</a>", controller);
+  set(controller, 'url', null);
+
+  shouldHaveElement('a:not(href)');
+});
+
+test("makes the value the same as the name if the value becomes true", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append("<a {{#id}}href='{{bind-attribute 'href' url}}'{{/id}}>click here</a>", controller);
+  set(controller, 'url', true);
+
+  shouldHaveElement('a[href="href"]');
 });
 
 })();
