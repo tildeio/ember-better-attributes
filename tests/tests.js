@@ -86,4 +86,65 @@ test("makes the value the same as the name if the value becomes true", function(
   shouldHaveElement('a[href="href"]');
 });
 
+module("The {{bind-class}} helper (used with #id)");
+
+test("when the class is a string, emits the string", function() {
+  var controller = Ember.Object.create({ active: "active" });
+  append("<div {{#id}}class='tab {{bind-class active}}'{{/id}}>Tab</div>", controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when the class is `this`, requires a truthy value", function() {
+  raises(function() {
+    var controller = Ember.Object.create();
+    append("<div {{#id}}class='tab {{bind-class this}}'{{/id}}>Tab</div>", controller);
+  }, /truthy/);
+});
+
+test("when the class is `this`, emits the truthy value", function() {
+  var controller = Ember.Object.create();
+  append("<div {{#id}}class='tab {{bind-class this truthy='active' falsy='inactive'}}'{{/id}}>Tab</div>", controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when a truthy name is specified and the value is truthy, emits the truthy value", function() {
+  var controller = Ember.Object.create({ active: true });
+  append("<div {{#id}}class='tab {{bind-class active truthy='active' falsy='inactive'}}'{{/id}}>Tab</div>", controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when a falsy name is specified and the value is falsy, emits the falsy value", function() {
+  var controller = Ember.Object.create({ active: false });
+  append("<div {{#id}}class='tab {{bind-class active truthy='active' falsy='inactive'}}'{{/id}}>Tab</div>", controller);
+
+  shouldHaveElement('div.tab.inactive');
+});
+
+test("when the class is a string, updates the string", function() {
+  var controller = Ember.Object.create({ active: "active" });
+  append("<div {{#id}}class='tab {{bind-class active}}'{{/id}}>Tab</div>", controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when a falsy name is specified and the value is changed changed to falsy, updates to the falsy value", function() {
+  var controller = Ember.Object.create({ active: true });
+  append("<div {{#id}}class='tab {{bind-class active truthy='active' falsy='inactive'}}'{{/id}}>Tab</div>", controller);
+  set(controller, 'active', false);
+
+  shouldHaveElement('div.tab.inactive');
+});
+
+test("when a truthy name is specified and the value is changed to truthy, updates to the truthy value", function() {
+  var controller = Ember.Object.create({ active: false });
+  append("<div {{#id}}class='tab {{bind-class active truthy='active' falsy='inactive'}}'{{/id}}>Tab</div>", controller);
+  set(controller, 'active', true);
+
+  shouldHaveElement('div.tab.active');
+});
+
+
 })();
