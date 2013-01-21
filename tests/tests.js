@@ -146,5 +146,102 @@ test("when a truthy name is specified and the value is changed to truthy, update
   shouldHaveElement('div.tab.active');
 });
 
+function process(template) {
+  var tokens = HTML5Tokenizer.tokenize(template);
+  return HTML5Tokenizer.generate(tokens);
+}
+
+module("Using the precompilation sugar for attributes");
+
+test("emits the initial value", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append(process("<a href='{{url}}'>click here</a>"), controller);
+
+  shouldHaveElement('a[href*="example.com"]');
+});
+
+test("updates the initial value when it changes", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append(process("<a href='{{url}}'>click here</a>"), controller);
+  set(controller, 'url', "http://yehudakatz.com");
+
+  shouldHaveElement('a[href*="yehudakatz.com"]');
+});
+
+test("removes the attribute if the value becomes falsy", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append(process("<a href='{{href}}'>click here</a>"), controller);
+  set(controller, 'url', null);
+
+  shouldHaveElement('a:not(href)');
+});
+
+test("makes the value the same as the name if the value becomes true", function() {
+  var controller = Ember.Object.create({ url: "http://example.com" });
+  append(process("<a href='{{url}}'>click here</a>"), controller);
+  set(controller, 'url', true);
+
+  shouldHaveElement('a[href="href"]');
+});
+
+module("Using the precompilation sugar for classes");
+
+test("when the class is a string, emits the string", function() {
+  var controller = Ember.Object.create({ active: "active" });
+  append(process("<div class='tab {{active}}'>Tab</div>"), controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when the class is `this`, requires a truthy value", function() {
+  raises(function() {
+    var controller = Ember.Object.create();
+    append(process("<div class='tab {{this}}'>Tab</div>"), controller);
+  }, /truthy/);
+});
+
+test("when the class is `this`, emits the truthy value", function() {
+  var controller = Ember.Object.create();
+  append(process("<div class='tab {{bind-class this truthy=\"active\" falsy=\"inactive\"}}'>Tab</div>"), controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when a truthy name is specified and the value is truthy, emits the truthy value", function() {
+  var controller = Ember.Object.create({ active: true });
+  append(process("<div class='tab {{bind-class active truthy=\"active\" falsy=\"inactive\"}}'>Tab</div>"), controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when a falsy name is specified and the value is falsy, emits the falsy value", function() {
+  var controller = Ember.Object.create({ active: false });
+  append(process("<div class='tab {{bind-class active truthy=\"active\" falsy=\"inactive\"}}'>Tab</div>"), controller);
+
+  shouldHaveElement('div.tab.inactive');
+});
+
+test("when the class is a string, updates the string", function() {
+  var controller = Ember.Object.create({ active: "active" });
+  append(process("<div class='tab {{active}}'>Tab</div>"), controller);
+
+  shouldHaveElement('div.tab.active');
+});
+
+test("when a falsy name is specified and the value is changed changed to falsy, updates to the falsy value", function() {
+  var controller = Ember.Object.create({ active: true });
+  append(process("<div class='tab {{bind-class active truthy=\"active\" falsy=\"inactive\"}}'>Tab</div>"), controller);
+  set(controller, 'active', false);
+
+  shouldHaveElement('div.tab.inactive');
+});
+
+test("when a truthy name is specified and the value is changed to truthy, updates to the truthy value", function() {
+  var controller = Ember.Object.create({ active: false });
+  append(process("<div class='tab {{bind-class active truthy=\"active\" falsy=\"inactive\"}}'>Tab</div>"), controller);
+  set(controller, 'active', true);
+
+  shouldHaveElement('div.tab.active');
+});
 
 })();
